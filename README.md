@@ -26,6 +26,9 @@ npm run preview
 
 ## GitHub Pagesへの公開・更新
 
+公開URL: https://yuuuiko411.github.io/design-calc/  
+リポジトリ: https://github.com/yuuuiko411/design-calc
+
 このフォルダを単独リポジトリのルートとして扱います。GitHubのSettings → Pages → Sourceを **GitHub Actions** に設定すると、`main`へのpushで`.github/workflows/deploy.yml`がlint・型チェック・94件のテスト・ビルドを順番に実行し、`dist/`だけを公開します。失敗した場合は公開ジョブを実行しません。
 
 ActionsはPagesの公開先から`PAGES_BASE_PATH`を設定し、JS・CSS・faviconをリポジトリ配下のURLで読み込めるようにします。通常のローカル開発では`/`を使います。サブパスでのローカル確認例:
@@ -40,6 +43,13 @@ npm run test:browser
 ```
 
 更新はこのフォルダで修正し、`git add`・`git commit`・`git push origin main`を実行します。GitHubのActionsで成功を確認し、PagesのURLを開いてください。`node_modules/`・`dist/`・`qa/artifacts/`・環境変数ファイルはGitの対象外です。
+
+公開HTTPS URLに対しても同じ検証を実行できます:
+
+```powershell
+$env:QA_URL='https://yuuuiko411.github.io/design-calc'
+npm run test:browser
+```
 
 ## 実装機能
 

@@ -45,7 +45,8 @@ try {
     await page.goto(`${baseURL}/#${tool}`)
     await page.getByRole('button', { name: label, exact: true }).click()
     await page.getByText('コピーしました。クリップボードから貼り付けできます。').waitFor()
-    assert.equal(await page.evaluate(() => navigator.clipboard.readText()), expected)
+    const copied = await page.evaluate(() => navigator.clipboard.readText())
+    assert.equal(copied.replace(/\r\n/g, '\n'), expected)
   }
   report.interactions.push('spacing, type and aspect clipboard contents')
 
