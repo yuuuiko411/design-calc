@@ -1,57 +1,43 @@
 # Design Calc. v1.0
 
-Webデザイナー・フロントエンド開発者のための、小さな計算道具。React + Vite + TypeScript strict + Tailwind CSS v4で実装しています。shadcn/uiのButton / InputパターンとLucide Reactを使用しています。
+Webデザイナー・フロントエンド開発者のための、小さな計算道具。px / rem変換、余白スケール、文字サイズ、アスペクト比をブラウザで計算できます。
 
-## 起動方法
+**[公開アプリを使う → https://yuuuiko411.github.io/design-calc/](https://yuuuiko411.github.io/design-calc/)**
 
-Node.js 22.12以降（検証環境: Node.js 24）とnpmを用意してください。
+インストール・アカウント登録は不要です。すぐに使いたい方は上の公開アプリを開いてください。[ソースコードはこちら](https://github.com/yuuuiko411/design-calc)。
 
-```powershell
-cd design-calc
-npm ci
-npm run dev
-```
+## 目次
 
-表示されたlocalhost URLを開きます。通常は `http://127.0.0.1:5173` です。
+- [Quick start (clients) — アプリを使う](#quick-start-clients)
+- [Features — 実装機能](#features)
+- [Local development — ローカル開発](#local-development)
+- [Deployment — 公開・更新](#deployment)
+- [Configuration — 設定](#configuration)
+- [構成と計算の扱い](#構成と計算の扱い)
+- [検証](#検証)
+- [既知の制約](#既知の制約)
+- [今後の改善候補](#今後の改善候補)
+- [Attribution — 使用技術・帰属](#attribution)
+- [License — ライセンス](#license)
 
-```sh
-npm run lint
-npm run typecheck
-npm test
-npm run build
-npm run preview
-```
+<a id="quick-start-clients"></a>
 
-本番配信する場合は、生成された`dist/`を静的ホスティングに配置してください。ハッシュによる画面切替のため、サーバー側のルーティング設定は不要です。
+## Quick start (clients)
 
-## GitHub Pagesへの公開・更新
+1. [公開アプリ](https://yuuuiko411.github.io/design-calc/)を開きます。
+2. 使いたいツールを選び、数値や倍率・比率を入力します。結果は入力に合わせて更新されます。
+3. 結果欄のコピーボタンで値やCSSをコピーし、制作中のデザインやコードへ貼り付けます。
 
-公開URL: https://yuuuiko411.github.io/design-calc/  
-リポジトリ: https://github.com/yuuuiko411/design-calc
+| ツールへの直接リンク | 使い方の例 |
+| --- | --- |
+| [Unit Converter](https://yuuuiko411.github.io/design-calc/#unit) | rootを16px、値を24pxにすると `1.5rem` |
+| [Spacing Scale](https://yuuuiko411.github.io/design-calc/#spacing) | 基準8pxから余白スケールを作り、CSSカスタムプロパティを一括コピー |
+| [Type Scale](https://yuuuiko411.github.io/design-calc/#type) | 基準16px・倍率1.25で文字サイズの階層と実寸見本を確認 |
+| [Aspect Ratio](https://yuuuiko411.github.io/design-calc/#aspect) | 16:9・幅1200pxから高さ675pxを計算 |
 
-このフォルダを単独リポジトリのルートとして扱います。GitHubのSettings → Pages → Sourceを **GitHub Actions** に設定すると、`main`へのpushで`.github/workflows/deploy.yml`がlint・型チェック・94件のテスト・ビルドを順番に実行し、`dist/`だけを公開します。失敗した場合は公開ジョブを実行しません。
+計算はブラウザ内で行い、入力値を送信する独自API・バックエンドはありません。入力はツールの切替中は保持されますが、再読み込みすると初期値に戻ります。コピーが許可されない場合は、結果を選択して手動でコピーしてください。
 
-ActionsはPagesの公開先から`PAGES_BASE_PATH`を設定し、JS・CSS・faviconをリポジトリ配下のURLで読み込めるようにします。通常のローカル開発では`/`を使います。サブパスでのローカル確認例:
-
-```powershell
-$env:PAGES_BASE_PATH='/design-calc/'
-npm run build
-npm run preview
-# 別ターミナルから実行
-$env:QA_URL='http://127.0.0.1:4173/design-calc'
-npm run test:browser
-```
-
-更新はこのフォルダで修正し、`git add`・`git commit`・`git push origin main`を実行します。GitHubのActionsで成功を確認し、PagesのURLを開いてください。`node_modules/`・`dist/`・`qa/artifacts/`・環境変数ファイルはGitの対象外です。
-
-公開HTTPS URLに対しても同じ検証を実行できます:
-
-```powershell
-$env:QA_URL='https://yuuuiko411.github.io/design-calc'
-npm run test:browser
-```
-
-## 実装機能
+## Features
 
 | ツール | 動作 | コピー形式 |
 | --- | --- | --- |
@@ -66,6 +52,94 @@ npm run test:browser
 - コピー成功・失敗は読み上げ対応の通知で伝えます。通知は閉じる操作も可能です。
 - PCは入力・結果の2カラム、767px以下は1カラムです。
 - ネイティブのリンク・ボタン・入力、スキップリンク、視認できるフォーカス、`aria-invalid` / `aria-describedby`、reduced motionに対応しています。
+
+## Local development
+
+Node.js 22.12以降（検証環境・GitHub Actions: Node.js 24）とnpmを用意してください。公開アプリを使うだけなら、この手順は不要です。
+
+```sh
+git clone https://github.com/yuuuiko411/design-calc.git
+cd design-calc
+npm ci
+npm run dev
+```
+
+ターミナルに表示されたURLを開きます。通常は `http://127.0.0.1:5173` です。ポートが使用中の場合は、表示された実際のURLを利用してください。
+
+| コマンド | 用途 |
+| --- | --- |
+| `npm run dev` | 開発サーバーを起動 |
+| `npm run lint` | ESLintで検査 |
+| `npm run typecheck` | TypeScriptの型チェック |
+| `npm test` | Vitestの計算・UIテストを実行 |
+| `npm run test:watch` | Vitestを監視モードで実行 |
+| `npm run test:browser` | 起動済みサーバーに対してChromeでブラウザ検証 |
+| `npm run build` | 型チェック後、本番用ファイルを `dist/` に生成 |
+| `npm run preview` | ビルド済みの `dist/` をローカルで確認（通常 `http://127.0.0.1:4173`） |
+
+ブラウザ検証にはGoogle Chromeが必要です。別ターミナルで `npm run dev` を起動してから実行してください。検証対象URL・ブラウザの変更は [Configuration](#configuration) を参照してください。
+
+## Deployment
+
+### GitHub Pagesへの公開・更新
+
+公開先は **[https://yuuuiko411.github.io/design-calc/](https://yuuuiko411.github.io/design-calc/)** です。このフォルダを単独リポジトリのルートとして扱います。
+
+1. GitHubリポジトリの **Settings → Pages → Source** を **GitHub Actions** に設定します。
+2. 変更をコミットして `main` へpushします。
+3. [GitHub Actions](https://github.com/yuuuiko411/design-calc/actions)でワークフローの成功を確認し、公開URLを開きます。
+
+[公開ワークフロー](.github/workflows/deploy.yml)はlint・型チェック・テスト・ビルドを順番に実行し、すべて成功した場合に `dist/` だけを公開します。Actions画面から手動実行（`workflow_dispatch`）も可能です。
+
+ActionsはPagesの公開先から `PAGES_BASE_PATH` を設定し、JS・CSS・faviconをリポジトリ配下のURLで読み込めるようにします。`node_modules/`・`dist/`・`qa/artifacts/`・環境変数ファイルはGitの対象外です。
+
+### その他の静的ホスティング
+
+`npm ci` → `npm run build` を実行し、生成された `dist/` を静的ホスティングへ配置してください。ビルドにはNode.jsが必要ですが、配信時のアプリ用サーバー・DBは不要です。コピー機能を使えるよう、公開先はHTTPSを使用してください。
+
+ドメイン直下に配置する場合、ベースパスの変更は不要です。サブディレクトリへ配置する場合は、ビルド前に `PAGES_BASE_PATH` を設定します。画面切替はURLハッシュを使うため、サーバー側のルーティング設定は不要です。
+
+## Configuration
+
+通常の利用・ローカル開発に必須の環境変数、APIキー、外部サービス設定はありません。
+
+| 環境変数 | 既定値 | 用途 |
+| --- | --- | --- |
+| `PAGES_BASE_PATH` | `/` | Viteのベースパス。サブパスへ配信する場合は `/design-calc/` のように指定。GitHub Actionsでは自動設定 |
+| `QA_URL` | `http://127.0.0.1:5173` | `npm run test:browser` の検証対象URL。サーバーは別途起動が必要 |
+| `BROWSER_CHANNEL` | `chrome` | Playwrightで起動するブラウザチャンネル。指定するブラウザは事前にインストールが必要 |
+
+`PAGES_BASE_PATH` はViteが読み込みます。`QA_URL` と `BROWSER_CHANNEL` はNode.jsの検証スクリプトが `process.env` から読むため、シェルの環境変数として設定してください。
+
+サブパスでのローカル確認例（PowerShell）:
+
+```powershell
+$env:PAGES_BASE_PATH='/design-calc/'
+npm run build
+npm run preview
+```
+
+プレビューを起動したまま、別ターミナルでリポジトリのルートから実行します。
+
+```powershell
+$env:QA_URL='http://127.0.0.1:4173/design-calc/'
+npm run test:browser
+```
+
+公開HTTPS URLにも同じブラウザ検証を実行できます。
+
+```powershell
+$env:QA_URL='https://yuuuiko411.github.io/design-calc/'
+npm run test:browser
+```
+
+PowerShellで設定した環境変数は、そのターミナル内で維持されます。通常の設定へ戻す場合は新しいターミナルを開くか、対象の変数を削除してください。
+
+```powershell
+Remove-Item Env:PAGES_BASE_PATH -ErrorAction SilentlyContinue
+Remove-Item Env:QA_URL -ErrorAction SilentlyContinue
+Remove-Item Env:BROWSER_CHANNEL -ErrorAction SilentlyContinue
+```
 
 ## 構成と計算の扱い
 
@@ -91,11 +165,11 @@ src/
 
 ## 検証
 
-Vitestで依頼の9つの計算例に加えて、範囲の上下限、空欄、負数、NaN、Infinity、整数制約、近似の同距離・0・小数誤差、表示丸めを検証します。React Testing Libraryではリアルタイム更新、不正時のコピー禁止、コピー成功・失敗、履歴移動、画面切替時の入力保持、文字サイズと注意文、比率変更時の固定辺維持を検証します。
+Vitestで主要な計算例に加えて、範囲の上下限、空欄、負数、NaN、Infinity、整数制約、近似の同距離・0・小数誤差、表示丸めを検証します。React Testing Libraryではリアルタイム更新、不正時のコピー禁止、コピー成功・失敗、履歴移動、画面切替時の入力保持、文字サイズと注意文、比率変更時の固定辺維持を検証します。
 
 Chromeをインストールし、別ターミナルで`npm run dev`を起動した状態で`npm run test:browser`を実行すると、320 / 390 / 768 / 1440pxの4画面のスクリーンショット、axeによるWCAG A / AA対象の自動検査、コピー・履歴・縮尺・キーボード操作の実ブラウザ検証を実行します。出力は`qa/artifacts/`です。サーバーURLは`QA_URL`、ブラウザチャンネルは`BROWSER_CHANNEL`環境変数で変更できます。
 
-2026-10-21の検証結果:
+2026-10-21の検証記録（既存の実装検証結果）:
 
 - ESLint・TypeScript strict・本番ビルド: 成功。
 - Vitest: 94件成功（計算83件、UI操作11件）。
@@ -118,4 +192,32 @@ Chromeをインストールし、別ターミナルで`npm run dev`を起動し�
 
 MVP後の候補として、スクリーンリーダー実機での追加検証と、CSS出力形式の選択が挙げられます。カスタム比率・任意階層・設定保存などは今回の実装には含めていません。
 
-技術構成の参考: [Tailwind CSS / Vite](https://tailwindcss.com/docs/installation/using-vite)、[shadcn/ui / Tailwind v4](https://ui.shadcn.com/docs/tailwind-v4)。
+## Attribution
+
+このアプリはReact + Vite + TypeScript strict + Tailwind CSS v4で実装しています。Button / Inputはshadcn/uiのパターンを参考にし、アイコンにはLucide Reactを使用しています。
+
+| プロジェクト | このアプリでの用途 | ライセンス表記 |
+| --- | --- | --- |
+| [React / React DOM](https://github.com/facebook/react) | UIと描画 | MIT |
+| [Vite](https://github.com/vitejs/vite) | 開発サーバー・ビルド | MIT |
+| [TypeScript](https://github.com/microsoft/TypeScript) | 型チェック | Apache-2.0 |
+| [Tailwind CSS](https://github.com/tailwindlabs/tailwindcss) | スタイル | MIT |
+| [shadcn/ui](https://github.com/shadcn-ui/ui) | UIコンポーネントの参考パターン | MIT |
+| [Radix UI](https://github.com/radix-ui/primitives) | ButtonのSlot | MIT |
+| [Lucide](https://github.com/lucide-icons/lucide) | アイコン | ISC（一部Feather由来のMIT表記を含む） |
+| [class-variance-authority](https://github.com/joe-bell/cva) | コンポーネントのバリアント | Apache-2.0 |
+| [clsx](https://github.com/lukeed/clsx) / [tailwind-merge](https://github.com/dcastil/tailwind-merge) | CSSクラスの結合・調整 | MIT |
+
+Lucideの著作権表記には、Feather由来の部分についてCole Bemis（2013–2022）、その他についてLucide Contributors（2022）が記載されています。
+
+上記は主要な使用技術の一覧です。開発・検証用を含む依存関係は [package.json](package.json)、固定されたバージョンは [package-lock.json](package-lock.json) を参照してください。各依存パッケージのライセンス全文・著作権表示は、インストール済みパッケージに含まれる `LICENSE` / `NOTICE` 等を確認してください。
+
+技術構成の参考: [Tailwind CSS / Vite](https://tailwindcss.com/docs/installation/using-vite)、[shadcn/ui / Tailwind v4](https://ui.shadcn.com/docs/tailwind-v4)。文字見本はOSのシステムフォントを使用し、外部フォントは取得していません。
+
+## License
+
+アプリのフッター表記: © Design Calc.（年は表示時の年）。
+
+このリポジトリには現在、プロジェクト本体の `LICENSE` ファイルおよび利用許諾条件の明示がありません。本体の再利用・改変・再配布について確認が必要な場合は、[リポジトリの所有者](https://github.com/yuuuiko411)へお問い合わせください。
+
+使用している第三者ライブラリ・アイコンのライセンスは、それぞれのプロジェクトに従います。[Attribution](#attribution) に記載したライセンスは依存技術のものであり、Design Calc.本体のライセンスを指定するものではありません。
