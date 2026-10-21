@@ -14,7 +14,7 @@ export function UnitConverter({ announce }: { announce: Announce }) {
   const to = direction === 'px-rem' ? 'rem' : 'px'
   const output = result.ok ? `${formatNumber(result.value)}${to}` : ''
   const pixelSize = result.ok ? (direction === 'px-rem' ? Number(input) : result.value) : 24
-  const previewSize = Math.min(80, Math.max(8, pixelSize))
+  const previewSize = Math.min(80, Math.max(12, pixelSize))
   return <><div className="calculator-grid">
     <Panel title="変換する値を設定" eyebrow="INPUT" trailing={<ArrowRightLeft size={19} aria-hidden="true" />}>
       <div className="field"><span className="field-label">変換の方向</span><Segmented label="変換の方向" value={direction} onChange={setDirection} options={[{ value: 'px-rem', label: 'px → rem' }, { value: 'rem-px', label: 'rem → px' }]} /></div>
@@ -24,7 +24,7 @@ export function UnitConverter({ announce }: { announce: Announce }) {
       <Note>html要素に設定されたfont-sizeを基準に変換します。</Note>
     </Panel>
     <Panel title="変換結果" eyebrow="RESULT" className="result-panel" trailing={<span className="live-badge"><span />LIVE</span>}>
-      {result.ok ? <><div className="unit-result"><p className="result-caption">{formatNumber(Number(input))} {from}<ArrowDown size={15} aria-hidden="true" /></p><output className="hero-number" aria-label="変換結果">{formatNumber(result.value)}<span>{to}</span></output><p className="result-context">1rem = {formatNumber(Number(root))}px</p></div><div className="unit-preview"><div className="preview-heading"><span>SIZE PREVIEW</span><span>{pixelSize === previewSize ? '同じサイズ、異なる単位' : '見本は8〜80pxに縮尺調整'}</span></div><div className="preview-samples"><div><span style={{ fontSize: previewSize }}>Aa</span><code>{direction === 'px-rem' ? `${formatNumber(Number(input))}px` : `${formatNumber(result.value)}px`}</code></div><span className="equals">=</span><div><span style={{ fontSize: previewSize }}>Aa</span><code>{direction === 'px-rem' ? output : `${formatNumber(Number(input))}rem`}</code></div></div></div></> : <InvalidResult message={result.error} />}
+      {result.ok ? <><div className="unit-result"><p className="result-caption">{formatNumber(Number(input))} {from}<ArrowDown size={15} aria-hidden="true" /></p><output className="hero-number" aria-label="変換結果">{formatNumber(result.value)}<span>{to}</span></output><p className="result-context">1rem = {formatNumber(Number(root))}px</p></div><div className="unit-preview"><div className="preview-heading"><span>SIZE PREVIEW</span><span>{pixelSize === previewSize ? '同じサイズ、異なる単位' : '見本は12〜80pxに縮尺調整'}</span></div><div className="preview-samples"><div><span style={{ fontSize: previewSize }}>Aa</span><code>{direction === 'px-rem' ? `${formatNumber(Number(input))}px` : `${formatNumber(result.value)}px`}</code></div><span className="equals">=</span><div><span style={{ fontSize: previewSize }}>Aa</span><code>{direction === 'px-rem' ? output : `${formatNumber(Number(input))}rem`}</code></div></div></div></> : <InvalidResult message={result.error} />}
       <div className="result-actions"><span>CSSにそのまま貼り付け</span><CopyButton text={output} disabled={!result.ok} announce={announce} /></div>
     </Panel>
   </div><Formula>{direction === 'px-rem' ? 'rem = px ÷ root font size' : 'px = rem × root font size'}</Formula></>

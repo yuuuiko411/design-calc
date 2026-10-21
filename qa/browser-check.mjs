@@ -3,7 +3,7 @@ import AxeBuilder from '@axe-core/playwright'
 import assert from 'node:assert/strict'
 import { mkdir, writeFile } from 'node:fs/promises'
 
-// Start npm run dev first. Uses installed Google Chrome, or BROWSER_CHANNEL.
+// Start npm run build && npm run preview first (set QA_URL to the preview URL). Uses installed Google Chrome, or BROWSER_CHANNEL.
 const baseURL = (process.env.QA_URL || 'http://127.0.0.1:5173').replace(/\/$/, '')
 const browser = await chromium.launch({ channel: process.env.BROWSER_CHANNEL || 'chrome', headless: true })
 const context = await browser.newContext({ permissions: ['clipboard-read', 'clipboard-write'] })
@@ -12,6 +12,16 @@ const errors = []
 page.on('pageerror', error => errors.push(error.message))
 const report = { viewports: [], interactions: [], accessibility: [], errors }
 await mkdir('qa/artifacts', { recursive: true })
+
+async function readableTypography(label) {
+  const violations = await page.evaluate(() => Array.from(document.querySelectorAll('body *')).flatMap(el => {
+    if (!(el instanceof HTMLElement) || !el.checkVisibility() || !Array.from(el.childNodes).some(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim())) return []
+    const size = parseFloat(getComputedStyle(el).fontSize)
+    const primary = el.matches('.tool-nav a > span:not(.nav-number), .field label, .field-label, .input-wrap input, .segment, .copy-button, .spacing-row strong, .type-meta code, .formula code, .error-text, .notification p')
+    return size < (primary ? 16 : 12) ? [{ text: el.textContent.slice(0, 60), size, primary }] : []
+  }))
+  assert.deepEqual(violations, [], `${label}: text must meet 16px primary / 12px minimum sizes`)
+}
 
 async function noOverflow(label) {
   const metrics = await page.evaluate(() => ({ width: window.innerWidth, scroll: document.documentElement.scrollWidth }))
@@ -56,6 +66,7 @@ try {
       await page.goto(`${baseURL}/#${tool}`)
       await page.getByRole('heading', { level: 2 }).waitFor()
       await noOverflow(`${tool}@${width}`)
+      await readableTypography(`${tool}@${width}`)
       const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze()
       report.accessibility.push({ tool, width, violations: results.violations.map(v => ({ id: v.id, impact: v.impact, description: v.description, nodes: v.nodes.map(n => n.target) })) })
       await page.screenshot({ path: `qa/artifacts/${tool}-${width}.png`, fullPage: true })
@@ -103,6 +114,18 @@ try {
   const maximumTypeAxe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze()
   report.accessibility.push({ tool: 'type-maximum', width: 320, violations: maximumTypeAxe.violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => n.target) })) })
   report.interactions.push('actual maximum type size, keyboard horizontal scrolling')
+
+  await page.getByLabel('基準文字サイズ', { exact: true }).fill('8')
+  const small = page.getByRole('region', { name: /Smallの文字見本/ })
+  assert.equal(await small.locator('span').evaluate(el => getComputedStyle(el).fontSize), '12px')
+  await page.getByRole('button', { name: 'SmallのCSS値をコピー', exact: true }).click()
+  assert.equal(await page.evaluate(() => navigator.clipboard.readText()), 'font-size: 5.33px;')
+  await readableTypography('minimum type size')
+  await page.goto(`${baseURL}/#unit`)
+  await page.getByLabel('変換する値', { exact: true }).fill('0')
+  assert.equal(await page.locator('.preview-samples > div > span').first().evaluate(el => getComputedStyle(el).fontSize), '12px')
+  await readableTypography('minimum unit size')
+  report.interactions.push('12px minimum previews preserve calculated and copied values; UI typography floors across all viewports')
 
   await page.goto(`${baseURL}/#aspect`)
   for (const [w, h] of [[1, 1], [4, 3], [3, 2], [16, 9], [9, 16]]) {
